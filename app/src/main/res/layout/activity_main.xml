@@ -7,15 +7,27 @@
     android:background="@color/black"
     tools:context=".MainActivity">
 
+    <ToggleButton
+        android:id="@+id/toggleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOff="Off"
+        android:textOn="On"
+        app:layout_constraintEnd_toStartOf="@+id/reset_btn"
+        app:layout_constraintHorizontal_bias="0.53"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ListView
         android:id="@+id/listview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:orientation="vertical"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll"
         app:layout_constraintEnd_toStartOf="@+id/status"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/toggleButton" />
 
     <ImageView
         android:id="@+id/status"

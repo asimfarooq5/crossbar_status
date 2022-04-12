@@ -8,6 +8,7 @@ public class AppGlobals extends Application {
 
     public static Context sContext;
     public static final String KUCH_BHI_VALUE = "kuchbhi_";
+    public static final String KEY_MUTE = "mute";
 
     @Override
     public void onCreate() {
@@ -21,18 +22,17 @@ public class AppGlobals extends Application {
     }
 
 
-
     public static SharedPreferences getPreferenceManager() {
         return getContext().getSharedPreferences("shared_prefs", MODE_PRIVATE);
     }
 
-    public static void saveDataToSharedPreferences(String key, String value) {
+    public static void saveDataToSharedPreferences(String key, Boolean value) {
         SharedPreferences sharedPreferences = getPreferenceManager();
-        sharedPreferences.edit().putString(key, value).apply();
+        sharedPreferences.edit().putBoolean(key, value).apply();
     }
 
-    public static String getStringFromSharedPreferences(String key) {
+    public static Boolean getDataFromSharedPreferences(String key) {
         SharedPreferences sharedPreferences = getPreferenceManager();
-        return sharedPreferences.getString(key, "");
+        return sharedPreferences.getBoolean(key, true);
     }
 }

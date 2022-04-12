@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     Button btn;
     ArrayList<String> arrayList = new ArrayList<>();
     ArrayAdapter adapter;
+    ToggleButton toggleButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,19 +43,32 @@ public class MainActivity extends AppCompatActivity {
         status = findViewById(R.id.status);
         listView = findViewById(R.id.listview);
         btn = findViewById(R.id.reset_btn);
+        toggleButton = findViewById(R.id.toggleButton);
 
+        if (AppGlobals.getDataFromSharedPreferences(AppGlobals.KEY_MUTE)) {
+            toggleButton.setChecked(true);
+        } else {
+            toggleButton.setChecked(false);
+        }
+
+        toggleButton.setOnClickListener(view -> {
+            if (AppGlobals.getDataFromSharedPreferences(AppGlobals.KEY_MUTE)) {
+                AppGlobals.saveDataToSharedPreferences(AppGlobals.KEY_MUTE, false);
+                toggleButton.setChecked(false);
+            } else {
+                AppGlobals.saveDataToSharedPreferences(AppGlobals.KEY_MUTE, true);
+                toggleButton.setChecked(true);
+            }
+        });
         adapter = new ArrayAdapter<>(this, R.layout.list_item, arrayList);
 
         listView.setAdapter(adapter);
         subscribe();
 
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                arrayList.clear();
-                adapter.notifyDataSetChanged();
-                Toast.makeText(MainActivity.this, "screen cleared", Toast.LENGTH_SHORT).show();
-            }
+        btn.setOnClickListener(v -> {
+            arrayList.clear();
+            adapter.notifyDataSetChanged();
+            Toast.makeText(MainActivity.this, "screen cleared", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -76,7 +91,9 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("Joined realm");
 
         status.setBackground(getResources().getDrawable(R.drawable.status_ok));
-        ringtone();
+        if (AppGlobals.getDataFromSharedPreferences(AppGlobals.KEY_MUTE)) {
+            ringtone();
+        }
 
         CompletableFuture<Subscription> future = session.subscribe(
                 "brightflix.logs", this::onData);
@@ -97,7 +114,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void onData(List<Object> items) {
         System.out.println(items);
-        ringtone();
+        if (AppGlobals.getDataFromSharedPreferences(AppGlobals.KEY_MUTE)) {
+            ringtone();
+        }
         arrayList.add(items.get(0).toString());
         adapter.notifyDataSetChanged();
     }
