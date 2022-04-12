@@ -1,15 +1,21 @@
 package pk.codebase.crossbarstatus;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -21,22 +27,44 @@ import io.crossbar.autobahn.wamp.types.Subscription;
 public class MainActivity extends AppCompatActivity {
 
     ImageView status;
+    TextView textView;
+    Session wampSession;
+    ListView listView;
+    Button btn;
+    ArrayList<String> arrayList = new ArrayList<>();
+    ArrayAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         status = findViewById(R.id.status);
+        listView = findViewById(R.id.listview);
+        btn = findViewById(R.id.reset_btn);
+
+        adapter = new ArrayAdapter<>(this, R.layout.list_item, arrayList);
+
+        listView.setAdapter(adapter);
         subscribe();
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                arrayList.clear();
+                adapter.notifyDataSetChanged();
+                Toast.makeText(MainActivity.this, "screen cleared", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
+
     public void subscribe() {
-        Session wampSession = new Session();
+        wampSession = new Session();
         wampSession.addOnJoinListener(this::onJoinSubscribe);
         wampSession.addOnDisconnectListener(this::onDisconnect);
 
 
-        Client client = new Client(wampSession, "ws://192.168.100.2:8080/ws", "realm1");
+        Client client = new Client(wampSession, "ws://192.168.100.150:5020/ws", "deskconn");
 //        client.setOptions(new TransportOptions().);
         client.connect().whenComplete((exitInfo, throwable) -> {
             System.out.println("Exit!");
@@ -51,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         ringtone();
 
         CompletableFuture<Subscription> future = session.subscribe(
-                "pk.codebase.profile", this::onData);
+                "brightflix.logs", this::onData);
 
         future.thenAccept((Subscription subscription) -> {
 
@@ -65,14 +93,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void onDisconnect(Session session, boolean wasClean) {
         status.setBackground(getResources().getDrawable(R.drawable.ic_status));
-
-
     }
 
     private void onData(List<Object> items) {
         System.out.println(items);
-        Toast.makeText(this, "" + items, Toast.LENGTH_SHORT).show();
         ringtone();
+        arrayList.add(items.get(0).toString());
+        adapter.notifyDataSetChanged();
     }
 
     public void ringtone() {
@@ -85,4 +112,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        final Handler handler = new Handler();
+        final int delay = 2000;
+
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                if (!wampSession.isConnected()) {
+                    subscribe();
+                }
+                handler.postDelayed(this, delay);
+            }
+        }, delay);
+    }
 }
